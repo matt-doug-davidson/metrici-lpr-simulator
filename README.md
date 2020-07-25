@@ -8,6 +8,8 @@
 Example:
 ```bash
 CONFIG=~/http_sa_connectors/metrici_lpr_sim/nc.yaml ./metrici-lpr-simulator
+
+CONFIG=~/http_sa_connectors/metrici_lpr_sim/nc.yaml go run metrici-lpr-simulator.go
 ```
 
 ## YAML Configuration File
