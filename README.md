@@ -1,13 +1,13 @@
 # Metrici LPR Simulator
 
 ## Command line arguments
-|Argument |  Required  | Default   |  Description  |
-|:--:|:--:|:--:|:--:|
-| configfile | yes | N/A | Configuration file for this simulated Metrici LPR server. |
+|ENV Variable |  Required  |  Description  |
+|:--:|:--:|:--:|
+| CONFIG | yes | Configuration file for this simulated Metrici LPR server. |
 
 Example:
 ```bash
-./metrici-lpr-simulator -configfile ~/http_sa_connectors/metrici_lpr_sim/nc.yaml
+CONFIG=~/http_sa_connectors/metrici_lpr_sim/nc.yaml ./metrici-lpr-simulator
 ```
 
 ## YAML Configuration File

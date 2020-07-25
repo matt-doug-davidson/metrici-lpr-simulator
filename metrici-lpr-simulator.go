@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"crypto/md5"
-	"flag"
 	"fmt"
 	"io"
 	"math/rand"
@@ -351,15 +350,14 @@ func (c *camera) Run() {
 }
 
 func main() {
-	configFilePtr := flag.String("configfile", "./configuration.yaml", "Configuration file path")
 
-	flag.Parse()
+	configFile := os.Getenv("CONFIG")
 
 	// Create config structure
 	config := &Config{}
 
 	// Open config file
-	file, err := os.Open(*configFilePtr)
+	file, err := os.Open(configFile)
 	if err != nil {
 		fmt.Println("Error in opening configure file. Cause: ", err.Error())
 	}
