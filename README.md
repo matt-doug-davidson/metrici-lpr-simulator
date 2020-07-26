@@ -19,7 +19,7 @@ CONFIG=~/SimulatorData/MetriciLPR/Cary/nc.yaml go run metrici-lpr-simulator.go
 ```bash
 cd ~/go/src/github.com/matt-doug-davidson/metrici-lpr-simulator
 
-docker build -t mddofapex/metrici-lpr-simulator .
+docker build -t mddofapex/metrici-lpr-simulator:v0.02 .
 ```
 ### Run
 The program running in the container expects three files in the /data directory as follows:
@@ -33,10 +33,14 @@ The configuration file is specified per application. Its name is passed to the c
 
 Example:
 ```bash
-docker run --env CONFIG="nc.yaml" -v ~/SimulatorData/MetriciLPR/Cary:/data  mddofapex/metrici-lpr-simulator
+docker run --env CONFIG="nc.yaml" -v ~/SimulatorData/MetriciLPR/Cary:/data  mddofapex/metrici-lpr-simulator:v0.0.2
 ```
 In the example command above,the files, nc.yaml, plate_image and car_image, are copied to the ~/SimulatorData/MetriciLPR/Cary directory. They are accessed by the container program in the /data directory.
 
+### Push
+```bash
+docker push mddofapex/metrici-lpr-simulator:v0.0.2
+```
 
 ## YAML Configuration File
 
