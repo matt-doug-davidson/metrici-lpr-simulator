@@ -4,6 +4,13 @@
 # golang alpine 1.14.4
 FROM golang@sha256:6042b9cfb4eb303f3bdcbfeaba79b45130d170939318de85ac5b9508cb6f0f7e as builder
 
+# Install git + SSL ca certificates.
+# Git is required for fetching the dependencies.
+# Ca-certificates is required to call HTTPS endpoints.
+# This step is needed to provide the necessary timezone information. Otherwise a panic
+# occurs with unknown time zone error.
+RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-certificates
+
 # Create appuser
 ENV USER=appuser
 ENV UID=10001
@@ -39,6 +46,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 FROM scratch
 
 # Import from builder.
+# This is needed for timezone information
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 

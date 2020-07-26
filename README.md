@@ -7,10 +7,36 @@
 
 Example:
 ```bash
-CONFIG=~/http_sa_connectors/metrici_lpr_sim/nc.yaml ./metrici-lpr-simulator
+cd ~/go/src/github.com/matt-doug-davidson/metrici-lpr-simulator
 
-CONFIG=~/http_sa_connectors/metrici_lpr_sim/nc.yaml go run metrici-lpr-simulator.go
+go build metrici-lpr-simulator.go
+CONFIG=~/SimulatorData/MetriciLPR/Cary/nc.yaml ./metrici-lpr-simulator
+
+CONFIG=~/SimulatorData/MetriciLPR/Cary/nc.yaml go run metrici-lpr-simulator.go
 ```
+## Docker
+### Build
+```bash
+cd ~/go/src/github.com/matt-doug-davidson/metrici-lpr-simulator
+
+docker build -t mddofapex/metrici-lpr-simulator .
+```
+### Run
+The program running in the container expects three files in the /data directory as follows:
+- a configuration file
+- car_image
+- plate_image
+
+These files are placed in a host directory that is mapped via the volume option (-v or --volume) in the docker run command.
+
+The configuration file is specified per application. Its name is passed to the container via the environmental variable CONFIG.
+
+Example:
+```bash
+docker run --env CONFIG="nc.yaml" -v ~/SimulatorData/MetriciLPR/Cary:/data  mddofapex/metrici-lpr-simulator
+```
+In the example command above,the files, nc.yaml, plate_image and car_image, are copied to the ~/SimulatorData/MetriciLPR/Cary directory. They are accessed by the container program in the /data directory.
+
 
 ## YAML Configuration File
 
@@ -19,6 +45,8 @@ CONFIG=~/http_sa_connectors/metrici_lpr_sim/nc.yaml go run metrici-lpr-simulator
 |:------------|:-------|:----------|:------------|
 | target-location  | string      | True | The location we are simulating the Metrici is located.|
 | connector-host| string | True | The hostname of the Connector to which messsages are sent |
+| car-image-file| string| False | The path to the car image file. This is applicable only when the simulator is run from command line (not in docker) |
+|plate-image-file| string | False |The path to the plate image file. This is applicable only when the simulator is run from command line (not in docker) |
 | debug | bool | True | The debug flag |
 | cameras | Camera Configuration | True | An array of camera configurations (see below).
 
@@ -41,6 +69,9 @@ Example:
 ```yaml
 target-location: Europe/Bucharest
 connector-host: 10.52.16.76
+# Define for running from CLI. Not needed for docker.
+car-image-path: /home/allied/mapper123.json
+plate-image-path: /home/allied/mapper123.json
 cameras:
 -
       id: 1

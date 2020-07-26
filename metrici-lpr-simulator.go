@@ -34,6 +34,8 @@ type CameraYaml struct {
 type Config struct {
 	TargetLocation string       `yaml:"target-location"`
 	ConnectorHost  string       `yaml:"connector-host"`
+	CarImagePath   string       `yaml:"car-image-path"`
+	PlateImagePath string       `yaml:"plate-image-path"`
 	Cameras        []CameraYaml `yaml:"cameras"`
 	Debug          bool         `yaml:"debug"`
 }
@@ -47,6 +49,8 @@ type camera struct {
 	rateVariance   float64
 	authKey        string //
 	targetLocation string
+	plateImagePath string
+	carImagePath   string
 	debug          bool
 	// Derived
 	idNum           int
@@ -191,7 +195,10 @@ func getVehicleColor(vehicle string) string {
 }
 
 func getTargetTimestamp(targetLocation string) string {
-	loc, _ := time.LoadLocation(targetLocation)
+	loc, err := time.LoadLocation(targetLocation)
+	if err != nil {
+		fmt.Println("Error LoadLocation failed: Cause: ", err.Error())
+	}
 	now := time.Now().In(loc)
 	timeStr := now.Format("2006-01-02_15:04:05")
 	return timeStr
@@ -259,8 +266,17 @@ func (cam *camera) send() {
 
 	// Images now.
 	// car_image
-	//carImageFileName := "/home/allied/car_image"
-	carImageFileName := "/home/allied/mapper123.json"
+	var carImageFileName string
+	var plateImageFileName string
+	if isRunningInDockerContainer() {
+		// Container path
+		carImageFileName = "/data/car_image"
+		plateImageFileName = "/data/plate_image"
+	} else {
+		// Absolute path
+		carImageFileName = cam.carImagePath
+		plateImageFileName = cam.plateImagePath
+	}
 	carImageFile, errCarOpen := os.Open(carImageFileName)
 	if errCarOpen != nil {
 		fmt.Println("Error opening car image file. Cause: ", errCarOpen.Error())
@@ -279,7 +295,6 @@ func (cam *camera) send() {
 	}
 
 	// plate_image
-	plateImageFileName := "/home/allied/mapper123.json"
 	plateImageFile, errPlateOpen := os.Open(plateImageFileName)
 	if errPlateOpen != nil {
 		fmt.Println("Error opening plate image file. Cause: ", errPlateOpen.Error())
@@ -349,9 +364,29 @@ func (c *camera) Run() {
 	}
 }
 
+func isRunningInDockerContainer() bool {
+	// docker creates a .dockerenv file at the root
+	// of the directory tree inside the container.
+	// if this file exists then the viewer is running
+	// from inside a container so return true
+
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	return false
+}
+
 func main() {
 
-	configFile := os.Getenv("CONFIG")
+	var configFile string
+	if isRunningInDockerContainer() {
+		// Container path
+		configFile = "/data/" + os.Getenv("CONFIG")
+	} else {
+		// Absolute path
+		configFile = os.Getenv("CONFIG")
+	}
 
 	// Create config structure
 	config := &Config{}
@@ -359,7 +394,8 @@ func main() {
 	// Open config file
 	file, err := os.Open(configFile)
 	if err != nil {
-		fmt.Println("Error in opening configure file. Cause: ", err.Error())
+		panicMsg := fmt.Sprintf("Error in opening configuration file, %s. Cause: %s\n", configFile, err.Error())
+		panic(panicMsg)
 	}
 	defer file.Close()
 	// Init new YAML decode
@@ -370,10 +406,21 @@ func main() {
 		fmt.Println("Error in decode YAML from file. Cause: ", err.Error())
 	}
 
+	if !isRunningInDockerContainer() {
+		if config.CarImagePath == "" {
+			fmt.Println("Car Image is not defined in configuration file")
+			return
+		}
+		if config.PlateImagePath == "" {
+			fmt.Println("Plate Image is not defined in configuration file")
+			return
+		}
+	}
 	for _, c := range config.Cameras {
 		var cam = camera{id: c.ID, connHost: config.ConnectorHost, authKey: c.AuthKey,
 			direction: c.Direction, rate: c.Rate, rateVariance: c.RateVariance,
-			targetLocation: config.TargetLocation, debug: config.Debug}
+			targetLocation: config.TargetLocation, carImagePath: config.CarImagePath,
+			plateImagePath: config.PlateImagePath, debug: config.Debug}
 		cam.init()
 		go cam.Run()
 	}
