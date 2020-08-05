@@ -65,7 +65,7 @@ func (c *camera) init() {
 	c.intervalAverage = 3600.0 / (c.rate) // average interval between vehicles
 	c.intervalRange = c.intervalAverage * (c.rateVariance / 100.0)
 	c.minimumInterval = c.intervalAverage - c.intervalRange
-	c.intervalRange = 2.0
+	c.intervalRange *= 2
 }
 
 func (c *camera) getNumber(vehicleClass string) string {
@@ -113,6 +113,9 @@ func getCountryCode() string {
 	return cc
 }
 
+// Get random vehicle class based upon the following
+// weighted distribution. The string values are what
+// are sent in the message to the client.
 func getVehicleClass() string {
 	prob := rand.Float64()
 	vc := ""
@@ -357,7 +360,11 @@ func (cam *camera) send() {
 
 func (c *camera) Run() {
 	for {
+		pre := time.Now().UnixNano()
 		c.send()
+		post := time.Now().UnixNano()
+		tdiff := post - pre
+		fmt.Printf("%d.%9.9d\n", tdiff/1000000000, tdiff%1000000000)
 		value := c.minimumInterval + c.intervalRange*rand.Float64()
 		sleepDuration := time.Duration(value * 1000000000)
 		time.Sleep(sleepDuration)
